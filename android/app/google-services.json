@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "1080622165566",
+    "firebase_url": "https://smart-sunglass-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "smart-sunglass",
+    "storage_bucket": "smart-sunglass.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1080622165566:android:e3e368e971d3e8dc4b2b6f",
+        "android_client_info": {
+          "package_name": "ssalpha.solvepanda.com"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDbNAlaWqXhtGhA-90VDPIAaD-7U-dVOgg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
