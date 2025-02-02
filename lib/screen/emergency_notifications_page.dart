@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'view_location_page.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'live_device_location.dart';
 
 class EmergencyNotificationsPage extends StatefulWidget {
   const EmergencyNotificationsPage({super.key});
@@ -13,60 +15,88 @@ class EmergencyNotificationsPage extends StatefulWidget {
 class _EmergencyNotificationsPageState
     extends State<EmergencyNotificationsPage> {
   final DatabaseReference _alertsRef =
-      FirebaseDatabase.instance.ref('alerts'); // Reference to the alerts node
+      FirebaseDatabase.instance.ref('alerts'); // Firebase Reference
   final List<Map<String, dynamic>> _alertsList = []; // Stores fetched alerts
+  late FlutterLocalNotificationsPlugin _localNotifications;
 
   @override
   void initState() {
     super.initState();
+    _setupFirebaseMessaging();
+    _initializeLocalNotifications();
     _listenForAlerts(); // Listen for new alerts in Firebase
   }
 
-  // Function to listen for new alerts in the Firebase Realtime Database
-  void _listenForAlerts() {
-    _alertsRef.onChildAdded.listen((event) {
-      final data = event.snapshot.value as Map?;
+  // 🔔 Initialize Firebase Cloud Messaging
+  void _setupFirebaseMessaging() {
+    FirebaseMessaging.instance.requestPermission();
 
-      if (data != null) {
-        // Only add alerts with type "Emergency"
-        if (data['Alert_Type'] == 'Emergency') {
-          final alert = {
-            'id': event.snapshot.key,
-            'Alert_Type': data['Alert_Type'],
-            'GPS_Location': data['GPS_Location'],
-            'Timestamp': data['Timestamp'],
-            'User_ID': data['User_ID'],
-          };
-
-          setState(() {
-            _alertsList.insert(
-                0, alert); // Add the alert to the top of the list
-          });
-
-          // Show an in-app notification for the new alert
-          _showNotification(alert);
-        }
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      if (message.notification != null) {
+        _showNotification(message.notification!.title ?? "Emergency Alert",
+            message.notification!.body ?? "Check the app for details.");
       }
     });
   }
 
-  // Function to display an in-app notification for a new alert
-  void _showNotification(Map<String, dynamic> alert) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'New Emergency Alert!',
-          style: TextStyle(fontSize: 16),
-        ),
-        duration: Duration(seconds: 5),
-        action: SnackBarAction(
-          label: 'View',
-          onPressed: () {
-            // Navigate to the notification in the list
-          },
-        ),
-      ),
+  // 🔔 Initialize Local Notifications
+  void _initializeLocalNotifications() {
+    _localNotifications = FlutterLocalNotificationsPlugin();
+    const AndroidInitializationSettings androidSettings =
+        AndroidInitializationSettings('@mipmap/ic_launcher');
+    const InitializationSettings settings =
+        InitializationSettings(android: androidSettings);
+
+    _localNotifications.initialize(settings);
+  }
+
+  // 🔔 Show Local Push Notification
+  Future<void> _showNotification(String title, String body) async {
+    const AndroidNotificationDetails androidDetails =
+        AndroidNotificationDetails(
+      'emergency_channel',
+      'Emergency Alerts',
+      importance: Importance.high,
+      priority: Priority.high,
+      playSound: true,
     );
+
+    const NotificationDetails notificationDetails =
+        NotificationDetails(android: androidDetails);
+
+    await _localNotifications.show(
+      0, // Notification ID
+      title,
+      body,
+      notificationDetails,
+    );
+  }
+
+  // 🔥 Listen for new Emergency Alerts from Firebase
+  void _listenForAlerts() async {
+    _alertsRef.onChildAdded.listen((event) async {
+      // ✅ Use async
+      final data = event.snapshot.value as Map?;
+      if (data != null && data['Alert_Type'] == 'Emergency') {
+        final alert = {
+          'id': event.snapshot.key,
+          'Alert_Type': data['Alert_Type'],
+          'GPS_Location': data['GPS_Location'],
+          'Timestamp': data['Timestamp'],
+          'User_ID': data['User_ID'],
+        };
+
+        // ✅ Update UI on main thread
+        setState(() {
+          _alertsList.insert(0, alert);
+        });
+
+        // ✅ Use Future.delayed to avoid UI freeze
+        Future.delayed(Duration(milliseconds: 500), () {
+          _showNotification("🚨 Emergency Alert!", "New emergency reported.");
+        });
+      }
+    });
   }
 
   @override
@@ -91,30 +121,19 @@ class _EmergencyNotificationsPageState
                 return Card(
                   margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
                   child: ListTile(
-                    leading: Icon(
-                      Icons.warning,
-                      color: Colors.red,
-                    ),
+                    leading: Icon(Icons.warning, color: Colors.red),
                     title: Text(
                       alert['Alert_Type'] ?? 'Unknown',
                       style: TextStyle(fontWeight: FontWeight.bold),
                     ),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Timestamp: ${alert['Timestamp']}'),
-                      ],
-                    ),
+                    subtitle: Text('Timestamp: ${alert['Timestamp']}'),
                     trailing: ElevatedButton(
                       onPressed: () {
-                        // Navigate to the map page and pass the GPS location
+                        // 🌍 Redirect to Live Location Page
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => ViewLocationPage(
-                              gpsLocation: alert[
-                                  'GPS_Location'], // Pass the GPS location to the map page
-                            ),
+                            builder: (context) => LiveDeviceLocation(),
                           ),
                         );
                       },

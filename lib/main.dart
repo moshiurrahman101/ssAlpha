@@ -2,7 +2,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'screen/splash_screen.dart';
 import 'screen/dashboard_screen.dart';
-import 'screen/live_location_page.dart';
+import 'screen/live_device_location.dart';
 import 'screen/emergency_notifications_page.dart';
 import 'screen/about_page.dart';
 
@@ -27,7 +27,8 @@ class MyApp extends StatelessWidget {
       routes: {
         '/': (context) => SplashScreen(), // Splash Screen
         '/dashboard': (context) => DashboardScreen(), // Dashboard Screen
-        '/live_location': (context) => MapViewPage(), // Live Location Page
+        '/live_location': (context) =>
+            LiveDeviceLocation(), // Live Location Page
         '/emergency_notifications': (context) =>
             EmergencyNotificationsPage(), // Emergency Notifications Page
         '/about': (context) => AboutPage(),

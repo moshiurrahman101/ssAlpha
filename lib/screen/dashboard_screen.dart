@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'live_location_page.dart';
 import 'emergency_notifications_page.dart';
 import 'settings_page.dart';
 import 'about_page.dart';
+import 'live_device_location.dart';
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
@@ -85,7 +85,8 @@ class DashboardScreen extends StatelessWidget {
                   title: 'Live Location Tracking',
                   onTap: () => Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => MapViewPage()),
+                    MaterialPageRoute(
+                        builder: (context) => LiveDeviceLocation()),
                   ),
                 ),
                 FeatureItem(
